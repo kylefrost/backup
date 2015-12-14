@@ -42,32 +42,61 @@ class Backup:
         else:
             self.backup_filename = backup_filename
 
-    def copy(self, path):
+    def create_backup_dir(self):
+        # Handles creating of backup dir
+
+        try:
+            # If backup dir exists, delete it
+            if os.path.exists(self.backup_dir):
+                shutil.rmtree(self.backup_dir)
+            
+            # Create backup dir
+            os.makedirs(self.backup_dir)
+
+            self.success("Backup directory created.")
+        except:
+            self.error("Could not create backup directory.")
+            
+    def remove_backup_dir(self):
+        # Handles removal of backup dir
+
+        try:
+            # If backup dir, delete it
+            if os.path.exists(self.backup_dir):
+                shutil.rmtree(self.backup_dir)
+
+            self.success("Removed backup directory.")
+        except:
+            self.error("Could not remove backup directory.")
+
+    def copy(self, path, bdir):
         # Copy `path` to backup directory
 
         if os.path.isdir(path):
             # path is a directory
             try:
-                shutil.copytree(path, self.backup_dir)
-                success("Backed up " + path)
+                shutil.copytree(path, self.backup_dir + bdir)
+                self.success("Backed up " + path)
             except:
-                error("Failed backing up " + path)
+                self.error("Failed backing up " + path)
         else:
             # path is a file
             try:
-                shutil.copy2(path, self.backup_dir)
-                success("Backed up " + path)
+                if not os.path.exists(self.backup_dir + bdir):
+                    os.makedirs(self.backup_dir + bdir)
+                shutil.copy2(path, self.backup_dir + bdir)
+                self.success("Backed up " + path)
             except:
-                error("Failed backing up " + path)
+                self.error("Failed backing up " + path)
 
     def archive(self):
         # Archive backup directory
         try:
             shutil.make_archive(self.backup_filename, "zip", self.backup_dir)
-            success("Created backup archive.")
+            self.success("Created backup archive.")
             return True
         except:
-            error("Failed creating backup archive.")
+            self.error("Failed creating backup archive.")
             return False
 
     def send(self, addr, remote_path):
@@ -82,9 +111,9 @@ class Backup:
                 scpc.put(self.backup_filename + ".zip", remote_path + self.backup_filename + ".zip")
 
             ssh.close()
-            success("Sent backup archive to external drive.")
+            self.success("Sent backup archive to external drive.")
         except:
-            error("Failed sending backup archive to external drive.")
+            self.error("Failed sending backup archive to external drive.")
 
     def error(self, msg):
         # Print error message with ornament
@@ -101,10 +130,12 @@ def main():
     backup = Backup()
 
     # Tweet that backup is starting
-    cur_time = time.strftime("%-I:%M:%S %p")
-    tweet.Tweet("@_kylefrost Starting a backup now. The time is " + cur_time + ".")
+    # cur_time = time.strftime("%-I:%M:%S %p")
+    # tweet.Tweet("@_kylefrost Starting a backup now. The time is " + cur_time + ".")
 
     try:
+        backup.create_backup_dir()
+
         # Things to backup
         # /home
         # /etc/apache2
@@ -117,11 +148,13 @@ def main():
         # if backup.archive():
         #     backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
 
+        backup.remove_backup_dir()
+
         backup.success("Backup was successful.")
-        tweet.Tweet("@_kylefrost The backup finished successfully. The backup started at " + cur_time + ".")
+        # tweet.Tweet("@_kylefrost The backup finished successfully. The backup started at " + cur_time + ".")
     except:
         backup.error("Backup was unsuccessul.")
-        tweet.Tweet("@_kylefrost The backup was unsuccessful. The backup started at " + cur_time + ".")
+        # tweet.Tweet("@_kylefrost The backup was unsuccessful. The backup started at " + cur_time + ".")
  
 if __name__ == "__main__":
     main()
