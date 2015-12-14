@@ -65,8 +65,10 @@ class Backup:
         try:
             shutil.make_archive(self.backup_filename, "zip", self.backup_dir)
             success("Created backup archive.")
+            return True
         except:
             error("Failed creating backup archive.")
+            return False
 
     def send(self, addr, remote_path):
         # Send file to addr:remote_path
@@ -112,7 +114,8 @@ def main():
         # apt packages
         # MySQL databases
 
-        # backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
+        # if backup.archive():
+        #     backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
 
         backup.success("Backup was successful.")
         tweet.Tweet("@_kylefrost The backup finished successfully. The backup started at " + cur_time + ".")
