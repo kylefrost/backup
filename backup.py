@@ -15,15 +15,14 @@ import paramiko
 import shutil
 import os
 import sys
+import subprocess
 import tweet
 import keys
 import time
 import datetime
 
-BTIME = str(int(time.time()))
-BACKUP_FILENAME = "backup" + BTIME
-BACKUP_DIR = "/mnt/stor/tmp/" + BACKUP_FILENAME + "/"
-SCP_DIR = "/Volumes/External HD/RPi/BACKUPS/"
+BACKUP_DIR = ""
+BACKUP_FILENAME = ""
 
 ###################################################################
 #                          BACKUP CLASS                           #
@@ -84,6 +83,16 @@ class Backup:
         except:
             self.error("Could not remove backup directory.")
 
+    def remove_archive_file(self):
+        # Removes backup archive zip after sending
+
+        try:
+            self.running("Removing backup archive file")
+            os.remove(BACKUP_FILENAME + ".zip")
+            self.success("Removed backup archive file.")
+        except:
+            self.error("There was a problem removing the archive file.")
+
     def ignorePath(path):
         def ignoref(p, files):
             return (f for f in files if os.abspath(os.path.join(p, f)) == path)
@@ -114,6 +123,7 @@ class Backup:
     def archive(self):
         # Archive backup directory
         try:
+            self.running("Creating backup archive")
             shutil.make_archive(self.backup_filename, "zip", self.backup_dir)
             self.success("Created backup archive.")
             return True
@@ -125,6 +135,7 @@ class Backup:
         # Send file to addr:remote_path
         
         try:
+            self.running("Sending backup zip to remote drive")
             ssh = paramiko.SSHClient()
             ssh.load_system_keys()
             ssh.connect(addr)
@@ -210,7 +221,7 @@ def backup_pip(backup):
     try:
         subprocess.call("pip freeze > /tmp/pip.txt", shell=True)
         backup.success("Created /tmp/pip.txt.")
-        shutil.copy2("/tmp/pip.txt", backup.get_backup_dir() + "pip.txt")
+        shutil.copyfile("/tmp/pip.txt", backup.get_backup_dir() + "pip.txt")
         os.remove("/tmp/pip.txt")
         backup.success("Removed /tmp/pip.txt.")
     except:
@@ -226,7 +237,7 @@ def backup_apt(backup):
     try:
         subprocess.call("dpkg --get-selections > /tmp/apt.txt", shell=True)
         backup.success("Created /tmp/apt.txt.")
-        shutil.copy2("/tmp/apt.txt", backup.get_backup_dir() + "apt.txt")
+        shutil.copyfile("/tmp/apt.txt", backup.get_backup_dir() + "apt.txt")
         os.remove("/tmp/apt.txt")
         backup.success("Removed /tmp/apt.txt.")
     except:
@@ -236,9 +247,9 @@ def backup_mysql(backup):
     # Backup MySQL databases
 
     try:
-        subprocess.call("mysqldump --all-databases -p\"" + keys.MYSQL_PASS + "\" > /tmp/mysql.sql", shell=True)
+        subprocess.call("mysqldump --all-databases --events -p\"" + keys.MYSQL_PASS + "\" > /tmp/mysql.sql", shell=True)
         backup.success("Created /tmp/mysql.sql.")
-        shutil.copy2("/tmp/mysql.sql", backup.get_backup_dir() + "mysql.sql")
+        shutil.copyfile("/tmp/mysql.sql", backup.get_backup_dir() + "mysql.sql")
         os.remove("/tmp/mysql.sql")
         backup.success("Removed /tmp/mysql.sql.")
     except:
@@ -248,15 +259,23 @@ def backup_mnt(backup):
     # Backup /mnt
 
     try:
-        backup.copy("/mnt/", "mnt")
+        backup.copy("/mnt/usb", "mnt/usb")
+
+        backup.running("Backing up /mnt/stor")
+        subprocess.call("rsync -av /mnt/stor /mnt/stor/tmp " + backup.get_backup_dir() + "/mnt --exclude \"tmp\" > /dev/null", shell=True)
+        backup.success("Backed up /mnt/stor.")
     except:
         pass
 
 def main():
     # Main function
 
+    cur_unix_time = str(int(time.time()))
+    bfile = "backup" + cur_unix_time
+    bdir = "/mnt/stor/tmp/" + bfile + "/"
+
     # Create instance of Backup class
-    backup = Backup()
+    backup = Backup(bdir, bfile)
 
     # Tweet that backup is starting
     cur_time = time.strftime("%-I:%M:%S %p")
@@ -288,12 +307,13 @@ def main():
         backup_mysql(backup)
 
         # Backup /mnt
-        # backup_mnt(backup)
+        backup_mnt(backup)
 
-        # if backup.archive():
-        #     backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
+        if backup.archive():
+            backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
 
-        # backup.remove_backup_dir()
+        backup.remove_backup_dir()
+        backup.remove_archive_file()
 
         backup.success("Backup was successful.")
         tweet.Tweet("@_kylefrost The backup finished successfully. The backup started at " + cur_time + ".")
