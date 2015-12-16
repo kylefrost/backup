@@ -89,7 +89,7 @@ class Backup:
 
         try:
             self.running("Removing backup archive file")
-            os.remove((self.backup_filename + ".zip")
+            os.remove(self.backup_filename + ".zip")
             self.success("Removed backup archive file.")
         except:
             self.error("There was a problem removing the archive file.")
@@ -139,10 +139,11 @@ class Backup:
             self.running("Sending backup zip to remote drive")
             ssh = paramiko.SSHClient()
             ssh.load_system_keys()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(addr)
 
             with scp.SCPClient(ssh.get_transport()) as scpc:
-                scpc.put(self.backup_filename + ".zip", remote_path + self.backup_filename + ".zip")
+                scpc.put(self.backup_filename + ".zip", remote_path)
 
             ssh.close()
             self.success("Sent backup archive to external drive.")
