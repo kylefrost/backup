@@ -138,7 +138,7 @@ class Backup:
         try:
             self.running("Sending backup zip to remote drive")
             ssh = paramiko.SSHClient()
-            ssh.load_system_keys()
+            ssh.load_system_host_keys()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(addr)
 
@@ -325,7 +325,7 @@ def main():
             backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
 
         backup.remove_backup_dir()
-        backup.remove_archive_file()
+        # backup.remove_archive_file()
 
         backup.success("Backup was successful.")
 
