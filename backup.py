@@ -269,6 +269,13 @@ def backup_mnt(backup):
     except:
         pass
 
+def get_elapsed(end, start):
+    elapsed = end - start
+    s = elapsed.seconds
+    h, r = divmod(s, 3600)
+    m, t = divmod(r, 60)
+    return str(h), (str(m) if m > 9 else "0" + str(m)), (str(t) if t > 9 else "0" + str(t))
+
 def main():
     # Main function
 
@@ -278,6 +285,9 @@ def main():
 
     # Create instance of Backup class
     backup = Backup(bdir, bfile)
+
+    # Get time for elapsed
+    start = datetime.datetime.now()
 
     # Tweet that backup is starting
     cur_time = time.strftime("%-I:%M:%S %p")
@@ -318,10 +328,18 @@ def main():
         backup.remove_archive_file()
 
         backup.success("Backup was successful.")
-        tweet.Tweet("@_kylefrost The backup finished successfully. The backup started at " + cur_time + ".")
+
+        end = datetime.datetime.now()
+        hours, minutes, seconds = get_elapsed(end, start)
+
+        tweet.Tweet("@_kylefrost The backup was successful. It started at " + cur_time + ". It took " + hours + "h:" + minutes + "m:" + seconds + "s.")
     except:
         backup.error("Backup was unsuccessul.")
-        tweet.Tweet("@_kylefrost The backup was unsuccessful. The backup started at " + cur_time + ".")
+
+        end = datetime.datetime.now()
+        hours, minutes, seconds = get_elapsed(end, start)
+
+        tweet.Tweet("@_kylefrost The backup was unsuccessful. It started at " + cur_time + ". It took " + hours + "h:" + minutes + "m:" + seconds + "s.")
  
 if __name__ == "__main__":
     main()
