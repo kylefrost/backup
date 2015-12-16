@@ -223,6 +223,7 @@ def backup_pip(backup):
     try:
         subprocess.call("pip freeze > /tmp/pip.txt", shell=True)
         backup.success("Created /tmp/pip.txt.")
+        backup.running("Backing up pip.txt")
         shutil.copyfile("/tmp/pip.txt", backup.get_backup_dir() + "pip.txt")
         os.remove("/tmp/pip.txt")
         backup.success("Removed /tmp/pip.txt.")
@@ -239,6 +240,7 @@ def backup_apt(backup):
     try:
         subprocess.call("dpkg --get-selections > /tmp/apt.txt", shell=True)
         backup.success("Created /tmp/apt.txt.")
+        backup.running("Backing up apt.txt")
         shutil.copyfile("/tmp/apt.txt", backup.get_backup_dir() + "apt.txt")
         os.remove("/tmp/apt.txt")
         backup.success("Removed /tmp/apt.txt.")
@@ -251,6 +253,7 @@ def backup_mysql(backup):
     try:
         subprocess.call("mysqldump --all-databases --events -p\"" + keys.MYSQL_PASS + "\" > /tmp/mysql.sql", shell=True)
         backup.success("Created /tmp/mysql.sql.")
+        backup.running("Backing up mysql.sql")
         shutil.copyfile("/tmp/mysql.sql", backup.get_backup_dir() + "mysql.sql")
         os.remove("/tmp/mysql.sql")
         backup.success("Removed /tmp/mysql.sql.")
