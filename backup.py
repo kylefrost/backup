@@ -18,6 +18,7 @@ import sys
 import subprocess
 import tweet
 import keys
+import z
 import time
 import datetime
 
@@ -88,7 +89,7 @@ class Backup:
 
         try:
             self.running("Removing backup archive file")
-            os.remove(BACKUP_FILENAME + ".zip")
+            os.remove((self.backup_filename + ".zip")
             self.success("Removed backup archive file.")
         except:
             self.error("There was a problem removing the archive file.")
@@ -124,7 +125,7 @@ class Backup:
         # Archive backup directory
         try:
             self.running("Creating backup archive")
-            shutil.make_archive(self.backup_filename, "zip", self.backup_dir)
+            z.ZipDir(self.backup_dir, self.backup_filename + ".zip")
             self.success("Created backup archive.")
             return True
         except:

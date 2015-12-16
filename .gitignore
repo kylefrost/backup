@@ -59,4 +59,4 @@ target/
 # Custom
 keys.py
 tmp/
-backup1*
+*.zip
