@@ -140,7 +140,7 @@ class Backup:
             ssh = paramiko.SSHClient()
             ssh.load_system_host_keys()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(addr)
+            ssh.connect(addr, username="kyle", password=keys.SSHPW)
 
             with scp.SCPClient(ssh.get_transport()) as scpc:
                 scpc.put(self.backup_filename + ".zip", remote_path)
@@ -325,10 +325,10 @@ def main():
         backup_mnt(backup)
 
         if backup.archive():
-            backup.send("10.0.1.2", "/Volumes/External HD/RPi/BACKUPS/")
+            backup.send("10.0.1.2", "/Users/kyle/Desktop")
 
         backup.remove_backup_dir()
-        # backup.remove_archive_file()
+        backup.remove_archive_file()
 
         backup.success("Backup was successful.")
 
