@@ -45,6 +45,8 @@ class Backup:
     def __init__(self, backup_dir=None, backup_filename=None):
         # Backup init handler
 
+        self.error_count = 0
+
         # Set self.backup_dir based on inputs
         if backup_dir is None:
             self.backup_dir = BACKUP_DIR
@@ -153,6 +155,8 @@ class Backup:
     def error(self, msg):
         # Print error message with ornament
         print tcolors.FAIL + tcolors.UNDERLINE + "! " + msg + tcolors.ENDC + tcolors.ENDC
+        # Increment internal error count
+        self.error_count += 1
 
     def success(self, msg):
         # Print success message with ornament
@@ -329,6 +333,9 @@ def main():
 
         backup.remove_backup_dir()
         backup.remove_archive_file()
+
+        if backup.error_count > 0:
+            raise ValueError("Unsuccessful")
 
         backup.success("Backup was successful.")
 
