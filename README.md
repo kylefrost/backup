@@ -8,3 +8,4 @@ The script simply dumps all the important stuff into a temporary folder (named `
 - After 50 backups, start deleting oldest in order to keep only 50 at a time.
 - Create a restore script that restores these backups (i.e. automates pulling from drive and unarchiving/moving)
 - Better error catching and printing
+- Break `Backup()` class into separate, reusable module
