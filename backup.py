@@ -329,7 +329,7 @@ def main():
         backup_mnt(backup)
 
         if backup.archive():
-            backup.send("10.0.1.2", "/Users/kyle/Desktop")
+            backup.send("10.0.1.2", "/Volumes/External/RPi/BACKUPS/")
 
         backup.remove_backup_dir()
         backup.remove_archive_file()
