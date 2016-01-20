@@ -60,3 +60,4 @@ target/
 keys.py
 tmp/
 *.zip
+errors.log

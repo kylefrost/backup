@@ -157,6 +157,9 @@ class Backup:
         print tcolors.FAIL + tcolors.UNDERLINE + "! " + msg + tcolors.ENDC + tcolors.ENDC
         # Increment internal error count
         self.error_count += 1
+        # Log error to file
+        with open("errors.log", "a") as errors_file:
+            errors_file.write(time.strftime("%-m.%-d.%Y %-I:%M:%S %p - ERRORMSG: " + msg + "\n"))
 
     def success(self, msg):
         # Print success message with ornament
@@ -329,15 +332,16 @@ def main():
         backup_mnt(backup)
 
         if backup.archive():
-            backup.send("10.0.1.2", "/Volumes/External/RPi/BACKUPS/")
+            backup.send("10.0.1.2", "/Users/kyle/RPI_BACKUPS/")
 
         backup.remove_backup_dir()
-        backup.remove_archive_file()
 
         if backup.error_count > 0:
             raise ValueError("Unsuccessful")
 
         backup.success("Backup was successful.")
+
+        backup.remove_archive_file()
 
         end = datetime.datetime.now()
         hours, minutes, seconds = get_elapsed(end, start)
@@ -345,11 +349,13 @@ def main():
         tweet.Tweet("@_kylefrost The backup was successful. It started at " + cur_time + ". It took " + hours + "h:" + minutes + "m:" + seconds + "s.")
     except:
         backup.error("Backup was unsuccessul.")
+        # Account for the preceding error
+        backup.error_count = backup.error_count - 1
 
         end = datetime.datetime.now()
         hours, minutes, seconds = get_elapsed(end, start)
 
-        tweet.Tweet("@_kylefrost The backup was unsuccessful. It started at " + cur_time + ". It took " + hours + "h:" + minutes + "m:" + seconds + "s.")
+        tweet.Tweet("@_kylefrost The backup was unsuccessful. There " + ("were " if backup.error_count > 1 else "was ") + str(backup.error_count) + (" errors. " if backup.error_count > 1 else " error. ") + "It started at " + cur_time + ". It took " + hours + "h:" + minutes + "m:" + seconds + "s.")
  
 if __name__ == "__main__":
     main()
